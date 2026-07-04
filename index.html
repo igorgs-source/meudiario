@@ -15,22 +15,22 @@ button{font-family:inherit;cursor:pointer}
 textarea,input{font-family:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .fade{animation:fadeIn 0.25s ease}
+.shake{animation:shake 0.4s ease}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
-/* Prevent iOS zoom on input focus */
-input,textarea,select{font-size:16px !important}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 // ── CONSTANTS ─────────────────────────────────────────────────
-const SK_CHECKINS = u => `mdia_c_${u}`;
+const SK_CHECKINS = u=>`mdia_c_${u}`;
 const SK_PROFILES = 'mdia_profiles';
 const SK_APIKEY   = 'mdia_apikey';
 
-const PALETTE = [
+const PALETTE=[
   {id:'violet',label:'Violeta', cor:'#9B6FE8',grad:'linear-gradient(135deg,#1A1040,#4A2D8A,#7A4FBB)'},
   {id:'rose',  label:'Rosa',    cor:'#E87BA8',grad:'linear-gradient(135deg,#2A1030,#8A2D5E,#C45F8A)'},
   {id:'teal',  label:'Verde',   cor:'#13B6A4',grad:'linear-gradient(135deg,#0A1F1D,#0D5E56,#13B6A4)'},
@@ -40,38 +40,44 @@ const PALETTE = [
   {id:'indigo',label:'Índigo',  cor:'#6B7FE8',grad:'linear-gradient(135deg,#0A0D2E,#1A2A7A,#6B7FE8)'},
   {id:'gold',  label:'Dourado', cor:'#D4A847',grad:'linear-gradient(135deg,#1A1208,#6B4A10,#D4A847)'},
 ];
-const EMOJIS = ['👨','👩','🧑','👦','👧','🧔','👴','👵','🧒','🙋','🙍','🧑‍⚕️','🧑‍💼','🧑‍🔬','🏃','🧘'];
-const ROTEIRO = {
+const EMOJIS=['👨','👩','🧑','👦','👧','🧔','👴','👵','🧒','🙋','🙍','🧑‍⚕️','🧑‍💼','🧑‍🔬','🏃','🧘'];
+const ROTEIRO={
   manha:['Como você dormiu? Teve dificuldade pra pegar no sono ou acordou durante a noite?','Como seu corpo está agora — alguma dor, tensão ou sintoma ao acordar?','Qual é o seu humor neste momento? Animado, cansado, ansioso?','Tem algo que está na sua cabeça logo de manhã?'],
-  noite:['Como foi sua energia ao longo do dia — começou bem e foi caindo, ou o contrário?','Aconteceu algo que afetou seu humor hoje, pra melhor ou pior?','Seu corpo deu algum sinal hoje — dor, cansaço fora do comum, algo diferente?','Como foi sua alimentação e hidratação hoje?','Qual é o saldo do dia — foi um dia leve, pesado, produtivo, arrastado?'],
+  noite:['Como foi sua energia ao longo do dia — começou bem e foi caindo, ou o contrário?','Aconteceu algo que afetou seu humor hoje, pra melhor ou pior?','Seu corpo deu algum sinal hoje — dor, cansaço fora do comum, algo diferente?','Como foi sua alimentação e hidratação hoje?','Qual é o saldo do dia — foi leve, pesado, produtivo, arrastado?'],
 };
-const HUMORES    = ['😔','😐','🙂','😄','🤩'];
-const HUMOR_LBL  = ['difícil','neutro','bem','ótimo','eufórico'];
-const ALIM_OPTS  = ['ruim','regular','boa','ótima'];
-const SONO_OPTS  = ['péssima','ruim','ok','boa','ótima'];
-const C = {
+const HUMORES   =['😔','😐','🙂','😄','🤩'];
+const HUMOR_LBL =['difícil','neutro','bem','ótimo','eufórico'];
+const ALIM_OPTS =['ruim','regular','boa','ótima'];
+const SONO_OPTS =['péssima','ruim','ok','boa','ótima'];
+const C={
   bg:'#0D0D1A',sf:'rgba(255,255,255,0.04)',bd:'rgba(255,255,255,0.08)',
   text:'#E8E6F0',muted:'rgba(255,255,255,0.4)',faint:'rgba(255,255,255,0.22)',
   red:'#C4404A',lav:'#C4A8FF',gradRec:'linear-gradient(135deg,#7A1A1A,#C4404A)',
 };
 
 // ── STORAGE ───────────────────────────────────────────────────
-function lsGet(k){try{return localStorage.getItem(k)}catch{return null}}
-function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch{return false}}
-function loadProfiles(){try{return JSON.parse(lsGet(SK_PROFILES)||'[]')}catch{return[]}}
-function saveProfiles(l){lsSet(SK_PROFILES,JSON.stringify(l))}
-function loadCheckins(id){try{return JSON.parse(lsGet(SK_CHECKINS(id))||'[]')}catch{return[]}}
-function saveCheckins(id,l){lsSet(SK_CHECKINS(id),JSON.stringify(l))}
-function getApiKey(){return lsGet(SK_APIKEY)||''}
-function setApiKey(k){return lsSet(SK_APIKEY,k)}
+const lsGet=k=>{try{return localStorage.getItem(k)}catch{return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch{return false}};
+const loadProfiles=()=>{try{return JSON.parse(lsGet(SK_PROFILES)||'[]')}catch{return[]}};
+const saveProfiles=l=>lsSet(SK_PROFILES,JSON.stringify(l));
+const loadCheckins=id=>{try{return JSON.parse(lsGet(SK_CHECKINS(id))||'[]')}catch{return[]}};
+const saveCheckins=(id,l)=>lsSet(SK_CHECKINS(id),JSON.stringify(l));
+const getApiKey=()=>lsGet(SK_APIKEY)||'';
+const setApiKey=k=>lsSet(SK_APIKEY,k);
+
+// ── PASSWORD HASH (simples, não criptográfico — apenas privacidade básica) ──
+async function hashPin(pin){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('mdia_'+pin));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
 // ── HELPERS ───────────────────────────────────────────────────
-const today   = () => new Date().toISOString().split('T')[0];
-const fmtDate = iso => new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
-const wday    = iso => new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');
-const fmtSec  = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
-const uid     = () => Math.random().toString(36).slice(2,9);
-const getPal  = id => PALETTE.find(p=>p.id===id)||PALETTE[0];
+const today  =()=>new Date().toISOString().split('T')[0];
+const fmtDate=iso=>new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+const wday   =iso=>new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','');
+const fmtSec =s=>`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+const uid    =()=>Math.random().toString(36).slice(2,9);
+const getPal =id=>PALETTE.find(p=>p.id===id)||PALETTE[0];
 
 // ── API ───────────────────────────────────────────────────────
 async function callClaude(prompt){
@@ -82,7 +88,7 @@ async function callClaude(prompt){
     body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]}),
   });
   const d=await res.json();
-  if(d.error) throw new Error(d.error.message);
+  if(d.error)throw new Error(d.error.message);
   return d.content?.[0]?.text||'';
 }
 
@@ -105,7 +111,6 @@ ${lines}
 Retorne exatamente (null para não mencionado):
 {"sono_horas":null,"sono_qualidade":null,"energia_inicio":null,"energia_fim":null,"humor":null,"sintomas":[],"alimentacao":null,"hidratacao":null,"nota_livre":null,"contexto_momento":"${momento}"}`;
 }
-
 function detectPadroes(hist){
   if(hist.length<3)return null;
   const p=[];
@@ -117,7 +122,6 @@ function detectPadroes(hist){
   Object.entries(fr).forEach(([s,n])=>{if(n>=2)p.push(`"${s}" recorrente`);});
   return p.join('; ')||null;
 }
-
 function buildInsight(dados,hist,nome,momento){
   const h=hist.length>0?hist.map(d=>`${fmtDate(d.data)} (${d.momento}): ${JSON.stringify(d.dados)}`).join('\n'):'Primeiro registro.';
   const pad=detectPadroes(hist);
@@ -129,7 +133,6 @@ HISTÓRICO: ${h}
 PADRÕES (interno): ${pad||'Poucos dados.'}
 REGRAS: máximo 3 frases · nunca liste dados ou métricas · nunca diga "detectamos" · nunca seja genérico ou clichê · fale como quem conhece essa pessoa há meses · se houver padrão, insinue com leveza · uma pergunta só se fizer sentido real · responda direto, sem introdução.`;
 }
-
 function buildAnalise(checkins,nome){
   return `Você é o meudIArio. Analise os registros de ${nome} e gere uma reflexão — algo que a pessoa não perceberia sozinha.
 REGISTROS: ${checkins.map(d=>`${fmtDate(d.data)} (${d.momento}): ${JSON.stringify(d.dados)}`).join('\n')}
@@ -137,697 +140,29 @@ REGRAS: 3 a 5 frases · nunca mencione dados técnicos · revele padrão de form
 }
 
 // ── VOICE ─────────────────────────────────────────────────────
-let recognition=null,recTimer=null,accumulated='',recSec=0;
+let recognition=null,recTimer=null,accumulated='';
 const voiceOK='SpeechRecognition' in window||'webkitSpeechRecognition' in window;
-
 function startRec(onUpdate,onErr){
   if(!voiceOK){onErr('Use Chrome ou Safari para gravar voz.');return;}
   accumulated='';
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  recognition=new SR();
-  recognition.lang='pt-BR';recognition.continuous=true;recognition.interimResults=true;
-  recognition.onresult=e=>{
-    let fi='',in_='';
-    for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fi+=t+' ';else in_+=t;}
-    if(fi)accumulated+=fi;
-    onUpdate((accumulated+in_).trim(),!!in_);
-  };
+  recognition=new SR();recognition.lang='pt-BR';recognition.continuous=true;recognition.interimResults=true;
+  recognition.onresult=e=>{let fi='',in_='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fi+=t+' ';else in_+=t;}if(fi)accumulated+=fi;onUpdate((accumulated+in_).trim(),!!in_);};
   recognition.onerror=e=>{if(e.error!=='no-speech')onErr('Verifique a permissão do microfone.');};
   recognition.onend=()=>{if(recognition){onUpdate(accumulated.trim(),false);recognition=null;clearInterval(recTimer);}};
-  recognition.start();
-  recSec=0;recTimer=setInterval(()=>{recSec++;},1000);
+  recognition.start();recTimer=setInterval(()=>{},1000);
 }
-function stopRec(onUpdate){
-  if(recognition){recognition.stop();recognition=null;}
-  clearInterval(recTimer);
-  if(onUpdate)onUpdate(accumulated.trim(),false);
-}
-function resetRec(){
-  if(recognition){recognition.stop();recognition=null;}
-  clearInterval(recTimer);accumulated='';recSec=0;
-}
+function stopRec(onUpdate){if(recognition){recognition.stop();recognition=null;}clearInterval(recTimer);if(onUpdate)onUpdate(accumulated.trim(),false);}
+function resetRec(){if(recognition){recognition.stop();recognition=null;}clearInterval(recTimer);accumulated='';}
 
-// ── ROUTER ────────────────────────────────────────────────────
-// screens: setup | select | newprofile | app
-let currentScreen='setup';
-let currentProfile=null;
-
-function navigate(screen,profile){
-  currentScreen=screen;
-  currentProfile=profile||null;
-  renderScreen();
-}
-
-function renderScreen(){
-  const app=document.getElementById('app');
-  app.innerHTML='';
-  if(currentScreen==='setup')     app.appendChild(buildSetup());
-  else if(currentScreen==='select')   app.appendChild(buildSelect());
-  else if(currentScreen==='newprofile') app.appendChild(buildNewProfile());
-  else if(currentScreen==='app')   app.appendChild(buildApp(currentProfile));
-}
-
-// ── SCREEN: SETUP ─────────────────────────────────────────────
-function buildSetup(){
-  const wrap=el('div',{style:{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px'}});
-  wrap.appendChild(buildLogo('configure para começar'));
-
-  const card=el('div',{style:{width:'100%',maxWidth:'380px',background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'20px',padding:'28px 24px',display:'flex',flexDirection:'column',gap:'16px'}});
-
-  card.appendChild(el('p',{style:{fontSize:'13px',color:C.muted,lineHeight:'1.6'}},'Para funcionar, o app precisa de uma ',el('strong',{style:{color:C.lav}},'API Key da Anthropic'),'. Ela fica salva só neste dispositivo.'));
-
-  // API key input — NÃO usa setState, atualiza diretamente
-  const keyWrap=el('div',{style:{position:'relative'}});
-  const keyInput=el('input',{
-    type:'password',
-    placeholder:'sk-ant-...',
-    style:{width:'100%',background:'rgba(255,255,255,0.07)',border:`1px solid ${C.bd}`,borderRadius:'10px',padding:'12px 44px 12px 14px',color:C.text,fontSize:'16px',outline:'none',boxSizing:'border-box'},
-  });
-  keyInput.value=getApiKey();
-
-  let showKey=false;
-  const eyeBtn=el('button',{
-    style:{position:'absolute',right:'12px',top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:C.faint,fontSize:'18px',padding:'4px',lineHeight:'1'},
-  },'👁');
-  eyeBtn.addEventListener('click',()=>{
-    showKey=!showKey;
-    keyInput.type=showKey?'text':'password';
-    eyeBtn.textContent=showKey?'🙈':'👁';
-  });
-  keyWrap.appendChild(keyInput);
-  keyWrap.appendChild(eyeBtn);
-
-  const keySection=el('div',{});
-  keySection.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'API Key'));
-  keySection.appendChild(keyWrap);
-  card.appendChild(keySection);
-
-  card.appendChild(el('p',{style:{fontSize:'11px',color:C.faint,lineHeight:'1.5'}},'Acesse ',el('strong',{},'console.anthropic.com'),' → Settings → API Keys → Create Key'));
-
-  const saveBtn=el('button',{
-    style:{padding:'13px 0',borderRadius:'12px',border:'none',background:'linear-gradient(135deg,#4A2D8A,#9B6FE8)',color:'#fff',fontSize:'15px',fontWeight:'600',width:'100%'},
-  },'salvar e começar');
-  saveBtn.addEventListener('click',()=>{
-    const k=keyInput.value.trim();
-    if(!k){alert('Cole sua API key para continuar.');return;}
-    const ok=setApiKey(k);
-    if(!ok){alert('Erro ao salvar. Tente novamente.');}
-    else navigate('select');
-  });
-  card.appendChild(saveBtn);
-
-  const hasKey=!!getApiKey();
-  if(hasKey){
-    const skipBtn=el('button',{
-      style:{padding:'10px 0',borderRadius:'12px',border:`1px solid ${C.bd}`,background:'transparent',color:C.faint,fontSize:'13px',width:'100%'},
-    },'já configurado — continuar →');
-    skipBtn.addEventListener('click',()=>navigate('select'));
-    card.appendChild(skipBtn);
-  }
-
-  wrap.appendChild(card);
-  return wrap;
-}
-
-// ── SCREEN: SELECT ────────────────────────────────────────────
-function buildSelect(){
-  const profiles=loadProfiles();
-  const wrap=el('div',{style:{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'28px 20px'}});
-  wrap.appendChild(buildLogo('quem está fazendo o check-in?'));
-
-  const cols=profiles.length===1?'1fr':profiles.length===2?'1fr 1fr':'repeat(auto-fill,minmax(130px,1fr))';
-  const grid=el('div',{style:{width:'100%',maxWidth:'460px',display:'grid',gridTemplateColumns:cols,gap:'12px'}});
-
-  profiles.forEach(p=>{
-    const pal=getPal(p.cor);
-    const count=loadCheckins(p.id).length;
-    const btn=el('button',{style:{padding:'22px 12px',borderRadius:'18px',border:`1.5px solid ${pal.cor}44`,background:`${pal.cor}0D`,display:'flex',flexDirection:'column',alignItems:'center',gap:'10px',transition:'all 0.2s'}});
-    btn.appendChild(el('div',{style:{fontSize:'44px',lineHeight:'1'}},p.emoji));
-    btn.appendChild(el('div',{style:{fontSize:'16px',fontWeight:'600',color:pal.cor}},p.nome));
-    btn.appendChild(el('div',{style:{fontSize:'10px',color:C.faint,fontFamily:'monospace'}},`${count} registro${count!==1?'s':''}`));
-    btn.addEventListener('click',()=>navigate('app',p));
-    grid.appendChild(btn);
-  });
-
-  // Botão novo perfil
-  const addBtn=el('button',{style:{padding:'22px 12px',borderRadius:'18px',border:`1.5px dashed ${C.bd}`,background:'transparent',display:'flex',flexDirection:'column',alignItems:'center',gap:'10px',color:C.faint}});
-  addBtn.appendChild(el('div',{style:{fontSize:'32px',lineHeight:'1'}},'+'));
-  addBtn.appendChild(el('div',{style:{fontSize:'13px'}},'novo perfil'));
-  addBtn.addEventListener('click',()=>navigate('newprofile'));
-  grid.appendChild(addBtn);
-  wrap.appendChild(grid);
-
-  const cfgBtn=el('button',{style:{marginTop:'20px',background:'transparent',border:'none',color:C.faint,fontSize:'11px',fontFamily:'monospace',letterSpacing:'0.06em'}},'⚙ alterar API key');
-  cfgBtn.addEventListener('click',()=>navigate('setup'));
-  wrap.appendChild(cfgBtn);
-  return wrap;
-}
-
-// ── SCREEN: NEW PROFILE ───────────────────────────────────────
-function buildNewProfile(){
-  // Estado local sem setState — tudo direto no DOM
-  let npNome='',npEmoji='👤',npCor='violet';
-
-  const wrap=el('div',{style:{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'28px 20px'}});
-  wrap.appendChild(buildLogo('novo perfil'));
-
-  const card=el('div',{style:{width:'100%',maxWidth:'380px',background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'20px',padding:'28px 24px',display:'flex',flexDirection:'column',gap:'20px'}});
-
-  // Preview (atualiza sem rerender)
-  const previewEmoji=el('div',{style:{fontSize:'40px',lineHeight:'1'}},'👤');
-  const previewNome=el('div',{style:{fontSize:'20px',fontWeight:'700',color:getPal('violet').cor}},'Nome');
-  const preview=el('div',{style:{display:'flex',alignItems:'center',gap:'14px',padding:'16px',background:`${getPal('violet').cor}0D`,border:`1px solid ${getPal('violet').cor}30`,borderRadius:'14px'}});
-  preview.appendChild(previewEmoji);
-  const previewMeta=el('div',{});
-  previewMeta.appendChild(previewNome);
-  previewMeta.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginTop:'2px',fontFamily:'monospace'}},'novo perfil'));
-  preview.appendChild(previewMeta);
-  card.appendChild(preview);
-
-  function updatePreview(){
-    const pal=getPal(npCor);
-    previewEmoji.textContent=npEmoji;
-    previewNome.textContent=npNome||'Nome';
-    previewNome.style.color=pal.cor;
-    preview.style.background=`${pal.cor}0D`;
-    preview.style.border=`1px solid ${pal.cor}30`;
-  }
-
-  // Nome — input direto, sem rerender
-  const nomeSection=el('div',{});
-  nomeSection.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'nome'));
-  const nomeInput=el('input',{
-    type:'text',
-    placeholder:'ex: Igor, Maria…',
-    style:{width:'100%',background:'rgba(255,255,255,0.07)',border:`1px solid ${C.bd}`,borderRadius:'10px',padding:'12px 14px',color:C.text,fontSize:'16px',outline:'none',boxSizing:'border-box'},
-  });
-  nomeInput.addEventListener('input',e=>{npNome=e.target.value;updatePreview();});
-  nomeSection.appendChild(nomeInput);
-  card.appendChild(nomeSection);
-
-  // Emoji
-  const emojiSection=el('div',{});
-  emojiSection.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'emoji'));
-  const emojiGrid=el('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px'}});
-  const emojiBtns={};
-  EMOJIS.forEach(e=>{
-    const b=el('button',{style:{padding:'6px',borderRadius:'8px',border:`1px solid ${C.bd}`,background:'transparent',fontSize:'22px',lineHeight:'1',transition:'all 0.15s'}},e);
-    b.addEventListener('click',()=>{
-      npEmoji=e;
-      Object.values(emojiBtns).forEach(x=>{x.style.border=`1px solid ${C.bd}`;x.style.background='transparent';});
-      b.style.border=`1px solid ${getPal(npCor).cor}`;b.style.background=`${getPal(npCor).cor}20`;
-      updatePreview();
-    });
-    emojiBtns[e]=b;
-    emojiGrid.appendChild(b);
-  });
-  emojiSection.appendChild(emojiGrid);
-  card.appendChild(emojiSection);
-
-  // Cor
-  const corSection=el('div',{});
-  corSection.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'cor'));
-  const corGrid=el('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px'}});
-  const corBtns={};
-  PALETTE.forEach(p=>{
-    const b=el('button',{
-      style:{width:'36px',height:'36px',borderRadius:'50%',border:`2px solid ${p.id==='violet'?'#fff':p.cor+'44'}`,background:p.cor,boxShadow:p.id==='violet'?`0 0 0 3px ${p.cor}66`:'none',transition:'all 0.15s'},
-      title:p.label,
-    });
-    b.addEventListener('click',()=>{
-      npCor=p.id;
-      Object.values(corBtns).forEach(x=>{x.style.border=`2px solid ${x._cor}44`;x.style.boxShadow='none';});
-      b.style.border='2px solid #fff';b.style.boxShadow=`0 0 0 3px ${p.cor}66`;
-      updatePreview();
-      // Atualiza bordas dos emoji btns selecionado
-      if(emojiBtns[npEmoji]){
-        Object.values(emojiBtns).forEach(x=>{x.style.border=`1px solid ${C.bd}`;x.style.background='transparent';});
-        emojiBtns[npEmoji].style.border=`1px solid ${p.cor}`;emojiBtns[npEmoji].style.background=`${p.cor}20`;
-      }
-    });
-    b._cor=p.cor;
-    corBtns[p.id]=b;
-    corGrid.appendChild(b);
-  });
-  // Marca violeta como selecionado por padrão
-  corBtns['violet'].style.border='2px solid #fff';corBtns['violet'].style.boxShadow=`0 0 0 3px ${getPal('violet').cor}66`;
-  corSection.appendChild(corGrid);
-  card.appendChild(corSection);
-
-  // Botões
-  const btnRow=el('div',{style:{display:'flex',gap:'10px'}});
-  const cancelBtn=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',border:`1px solid ${C.bd}`,background:'transparent',color:C.faint,fontSize:'14px'}},'cancelar');
-  cancelBtn.addEventListener('click',()=>navigate('select'));
-  const createBtn=el('button',{style:{flex:'2',padding:'12px 0',borderRadius:'12px',border:'none',background:'linear-gradient(135deg,#4A2D8A99,#9B6FE8)',color:'#fff',fontSize:'15px',fontWeight:'600'}},'criar perfil');
-  createBtn.addEventListener('click',()=>{
-    if(!npNome.trim()){alert('Digite um nome para o perfil.');return;}
-    const novo={id:uid(),nome:npNome.trim(),emoji:npEmoji,cor:npCor};
-    const lista=[...loadProfiles(),novo];
-    saveProfiles(lista);
-    navigate('select');
-  });
-  btnRow.appendChild(cancelBtn);btnRow.appendChild(createBtn);
-  card.appendChild(btnRow);
-  wrap.appendChild(card);
-  return wrap;
-}
-
-// ── SCREEN: APP ───────────────────────────────────────────────
-function buildApp(profile){
-  const pal=getPal(profile.cor);
-  const cor=pal.cor;
-
-  // Estado local do app — sem setState global
-  let checkins=loadCheckins(profile.id);
-  let momento='manha';
-  let fase='form'; // form|loading|insight|analise|historico
-  let insight='',analise='',loadMsg='';
-  let texto='',isInterim=false;
-  let recStatus='idle',voiceErr='';
-  // Campos manhã
-  let sono='',sonoQ=0,sintomaManha='';
-  // Campos noite
-  let enI=0,enF=0,humor=0,alim='',sintomaNoite='';
-
-  const jaFezHoje=m=>checkins.some(c=>c.data===today()&&c.momento===m);
-
-  // Container principal
-  const root=el('div',{style:{minHeight:'100vh',background:C.bg,color:C.text}});
-
-  // ── HEADER ──
-  const header=el('div',{style:{background:pal.grad,padding:'22px 20px 18px'}});
-  const headerInner=el('div',{style:{maxWidth:'460px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between'}});
-
-  const logoSide=el('div',{style:{display:'flex',alignItems:'center',gap:'10px'}});
-  const avatar=el('div',{style:{width:'38px',height:'38px',borderRadius:'50%',background:`${cor}30`,border:`1.5px solid ${cor}60`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'18px'}},profile.emoji);
-  const logoText=el('div',{});
-  const logoName=el('div',{style:{fontSize:'20px',fontWeight:'700',letterSpacing:'-0.02em',lineHeight:'1'}});
-  logoName.innerHTML=`<span style="color:rgba(255,255,255,0.3);font-weight:300">meu</span><span style="color:#fff">d</span><span style="color:${cor}">IA</span><span style="color:#fff">rio</span>`;
-  const logoSub=el('div',{style:{fontSize:'10px',color:'rgba(255,255,255,0.28)',marginTop:'3px',fontFamily:'monospace',letterSpacing:'0.08em'}},`${profile.nome.toUpperCase()} · ${checkins.length} registro${checkins.length!==1?'s':''}`);
-  logoText.appendChild(logoName);logoText.appendChild(logoSub);
-  logoSide.appendChild(avatar);logoSide.appendChild(logoText);
-
-  const navSide=el('div',{style:{display:'flex',gap:'7px'}});
-  const btnCheckin=el('button',{style:{borderRadius:'20px',padding:'5px 12px',color:cor,fontSize:'11px',fontWeight:'500',border:`1px solid ${cor}80`,background:`${cor}25`}},'check-in');
-  const btnHist=el('button',{style:{borderRadius:'20px',padding:'5px 12px',color:cor,fontSize:'11px',fontWeight:'500',border:`1px solid rgba(255,255,255,0.12)`,background:'transparent'}},'histórico');
-  const btnBack=el('button',{style:{borderRadius:'20px',padding:'5px 10px',color:C.faint,fontSize:'11px',border:'1px solid rgba(255,255,255,0.1)',background:'transparent'}},'↩');
-  btnCheckin.addEventListener('click',()=>showForm());
-  btnHist.addEventListener('click',()=>showHistorico());
-  btnBack.addEventListener('click',()=>navigate('select'));
-  navSide.appendChild(btnCheckin);navSide.appendChild(btnHist);navSide.appendChild(btnBack);
-
-  headerInner.appendChild(logoSide);headerInner.appendChild(navSide);
-  header.appendChild(headerInner);
-  root.appendChild(header);
-
-  // ── CONTENT AREA ──
-  const content=el('div',{style:{maxWidth:'460px',margin:'0 auto',padding:'20px 18px 60px'}});
-  root.appendChild(content);
-
-  function updateNavBtns(activeF){
-    btnCheckin.style.background=activeF==='form'||activeF==='insight'?`${cor}25`:'transparent';
-    btnCheckin.style.border=`1px solid ${activeF==='form'||activeF==='insight'?`${cor}80`:'rgba(255,255,255,0.12)'}`;
-    btnHist.style.background=activeF==='historico'?`${cor}25`:'transparent';
-    btnHist.style.border=`1px solid ${activeF==='historico'?`${cor}80`:'rgba(255,255,255,0.12)'}`;
-    logoSub.textContent=`${profile.nome.toUpperCase()} · ${checkins.length} registro${checkins.length!==1?'s':''}`;
-  }
-
-  // ── FORM ──
-  function showForm(){
-    fase='form';updateNavBtns('form');
-    content.innerHTML='';
-    const wrap=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'}});
-
-    // Toggle manhã/noite
-    const toggle=el('div',{style:{display:'flex',gap:'8px'}});
-    ['manha','noite'].forEach(m=>{
-      const b=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',fontSize:'14px',fontWeight:'500',transition:'all 0.2s',
-        background:momento===m?`${cor}20`:C.sf,
-        border:`1.5px solid ${momento===m?cor:C.bd}`,
-        color:momento===m?cor:C.muted,
-        opacity:jaFezHoje(m)?'0.45':'1',
-      }},`${m==='manha'?'🌤 manhã':'🌙 noite'}${jaFezHoje(m)?' ✓':''}`);
-      b.addEventListener('click',()=>{momento=m;showForm();});
-      toggle.appendChild(b);
-    });
-    wrap.appendChild(toggle);
-
-    // Roteiro
-    const rot=el('div',{style:{background:`${cor}0C`,border:`1px solid ${cor}28`,borderRadius:'14px',padding:'14px 16px'}});
-    rot.appendChild(el('div',{style:{fontSize:'10px',color:cor,marginBottom:'10px',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'monospace'}},momento==='manha'?'roteiro · manhã':'roteiro · noite'));
-    ROTEIRO[momento].forEach((q,i)=>{
-      const row=el('div',{style:{display:'flex',gap:'10px',marginBottom:i<ROTEIRO[momento].length-1?'8px':'0'}});
-      row.appendChild(el('div',{style:{fontSize:'11px',color:`${cor}90`,fontFamily:'monospace',marginTop:'1px',flexShrink:'0'}},`${i+1}.`));
-      row.appendChild(el('div',{style:{fontSize:'13px',color:C.muted,lineHeight:'1.55'}},q));
-      rot.appendChild(row);
-    });
-    wrap.appendChild(rot);
-
-    // Painel de voz
-    const painelVoz=buildVoicePainel();
-    wrap.appendChild(painelVoz);
-
-    // Campos opcionais
-    const camposBox=el('div',{style:{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'14px',padding:'16px'}});
-    camposBox.appendChild(el('div',{style:{fontSize:'10px',color:C.faint,marginBottom:'14px',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'monospace'}},momento==='manha'?'dados da noite':'dados do dia'));
-    camposBox.appendChild(momento==='manha'?buildCamposManha():buildCamposNoite());
-    wrap.appendChild(camposBox);
-
-    // Botão enviar
-    const envBtn=el('button',{style:{padding:'14px 0',borderRadius:'14px',border:'none',background:texto.trim()?`linear-gradient(135deg,${cor}99,${cor})`:'rgba(255,255,255,0.06)',color:texto.trim()?'#fff':C.faint,fontSize:'15px',fontWeight:'600',width:'100%',transition:'all 0.2s'}},'enviar check-in');
-    envBtn.addEventListener('click',handleSubmit);
-    wrap.appendChild(envBtn);
-
-    // Análise semanal
-    if(checkins.length>=4){
-      const anBtn=el('button',{style:{padding:'12px 0',borderRadius:'14px',background:`${cor}10`,border:`1px solid ${cor}40`,color:cor,fontSize:'14px',fontWeight:'500',width:'100%'}},`✦ análise da semana · ${checkins.length} registros`);
-      anBtn.addEventListener('click',handleAnalise);
-      wrap.appendChild(anBtn);
-    }
-
-    content.appendChild(wrap);
-  }
-
-  // ── PAINEL DE VOZ ──
-  function buildVoicePainel(){
-    const isRec=recStatus==='recording';
-    const panel=el('div',{style:{background:C.sf,border:`1.5px solid ${isRec?'rgba(196,64,74,0.5)':texto?cor+'80':C.bd}`,borderRadius:'18px',padding:'20px 18px',transition:'border-color 0.3s'}});
-    panel.appendChild(el('div',{style:{fontSize:'10px',color:C.faint,marginBottom:'18px',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'monospace'}},momento==='manha'?'como foi a noite e como você acordou?':'como foi o dia?'));
-
-    // Mic button
-    const micWrap=el('div',{style:{display:'flex',justifyContent:'center',marginBottom:'10px'}});
-    const micBtn=el('button',{style:{width:'80px',height:'80px',borderRadius:'50%',border:'none',cursor:voiceOK?'pointer':'not-allowed',
-      background:isRec?C.gradRec:`linear-gradient(135deg,${cor}99,${cor})`,
-      boxShadow:isRec?'0 0 0 10px rgba(196,64,74,0.12),0 0 0 20px rgba(196,64,74,0.05)':`0 8px 32px ${cor}66`,
-      transition:'all 0.3s',display:'flex',alignItems:'center',justifyContent:'center'}});
-    micBtn.innerHTML=isRec
-      ?'<svg width="22" height="22" viewBox="0 0 20 20" fill="white"><rect x="3" y="3" width="14" height="14" rx="2.5"/></svg>'
-      :'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
-    micBtn.addEventListener('click',()=>{
-      if(isRec){stopRec(t=>{texto=t;isInterim=false;showForm();});recStatus='idle';}
-      else{recStatus='recording';startRec((t,interim)=>{texto=t;isInterim=interim;updateTextoPreview();},err=>{voiceErr=err;recStatus='error';showForm();});}
-      showForm();
-    });
-    micWrap.appendChild(micBtn);
-    panel.appendChild(micWrap);
-
-    const micLbl=el('div',{style:{textAlign:'center',fontSize:'12px',color:isRec?C.red:C.muted,fontFamily:'monospace',letterSpacing:'0.06em',height:'18px',marginBottom:'14px'}},isRec?`⏺ gravando`:voiceOK?'toque para gravar':'use o texto abaixo');
-    panel.appendChild(micLbl);
-
-    // Preview transcrição
-    if(texto||isRec){
-      const prev=el('div',{id:'texto-preview',style:{background:`${cor}10`,border:`1px solid ${cor}28`,borderRadius:'12px',padding:'12px 14px',marginBottom:'14px',minHeight:'48px'}});
-      prev.appendChild(el('div',{style:{fontSize:'13px',lineHeight:'1.65',color:isInterim?C.muted:C.text,fontStyle:isInterim?'italic':'normal'}},texto||'ouvindo…'));
-      panel.appendChild(prev);
-    }
-
-    // Separador
-    const sep=el('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px'}});
-    sep.appendChild(el('div',{style:{flex:'1',height:'1px',background:C.bd}}));
-    sep.appendChild(el('span',{style:{fontSize:'10px',color:C.faint,fontFamily:'monospace',letterSpacing:'0.08em'}},'ou escreva'));
-    sep.appendChild(el('div',{style:{flex:'1',height:'1px',background:C.bd}}));
-    panel.appendChild(sep);
-
-    // Textarea — NÃO reconstrói ao digitar
-    const ta=el('textarea',{
-      style:{width:'100%',background:'rgba(255,255,255,0.04)',border:`1px solid ${C.bd}`,borderRadius:'10px',padding:'10px 12px',color:C.text,fontSize:'16px',resize:'vertical',outline:'none',lineHeight:'1.6',boxSizing:'border-box'},
-      placeholder:momento==='manha'?'fale ou escreva livremente…':'o saldo do dia, como você está agora…',
-      rows:'3',
-    });
-    ta.value=texto;
-    ta.addEventListener('input',e=>{texto=e.target.value;isInterim=false;});
-    panel.appendChild(ta);
-
-    if(voiceErr) panel.appendChild(el('div',{style:{fontSize:'12px',color:C.red,marginTop:'8px'}},`⚠ ${voiceErr}`));
-    return panel;
-  }
-
-  function updateTextoPreview(){
-    const prev=document.getElementById('texto-preview');
-    if(prev){const d=prev.querySelector('div');if(d)d.textContent=texto||'ouvindo…';}
-  }
-
-  // ── CAMPOS MANHÃ ──
-  function buildCamposManha(){
-    const wrap=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'}});
-
-    const grid=el('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}});
-    // Sono
-    const sonoWrap=el('div',{});
-    sonoWrap.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'6px'}},'😴 sono (horas)'));
-    const sonoInp=el('input',{type:'number',min:'0',max:'12',step:'0.5',placeholder:'ex: 7',style:{width:'100%',background:'rgba(255,255,255,0.06)',border:`1px solid ${C.bd}`,borderRadius:'8px',padding:'9px 12px',color:C.text,fontSize:'16px',boxSizing:'border-box',outline:'none'}});
-    sonoInp.value=sono;sonoInp.addEventListener('input',e=>sono=e.target.value);
-    sonoWrap.appendChild(sonoInp);grid.appendChild(sonoWrap);
-    // Sintoma
-    const sintWrap=el('div',{});
-    sintWrap.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'6px'}},'🤒 sintoma ao acordar'));
-    const sintInp=el('input',{type:'text',placeholder:'ex: dor de cabeça',style:{width:'100%',background:'rgba(255,255,255,0.06)',border:`1px solid ${C.bd}`,borderRadius:'8px',padding:'9px 12px',color:C.text,fontSize:'16px',boxSizing:'border-box',outline:'none'}});
-    sintInp.value=sintomaManha;sintInp.addEventListener('input',e=>sintomaManha=e.target.value);
-    sintWrap.appendChild(sintInp);grid.appendChild(sintWrap);
-    wrap.appendChild(grid);
-
-    // Qualidade sono
-    const qWrap=el('div',{});
-    qWrap.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'8px'}},'qualidade do sono'));
-    const qRow=el('div',{style:{display:'flex',gap:'6px'}});
-    SONO_OPTS.forEach((l,i)=>{
-      const b=el('button',{style:{flex:'1',padding:'7px 0',borderRadius:'8px',fontSize:'11px',
-        background:sonoQ===i+1?`${cor}30`:'rgba(255,255,255,0.04)',
-        border:`1px solid ${sonoQ===i+1?cor:C.bd}`,
-        color:sonoQ===i+1?cor:C.faint,fontWeight:sonoQ===i+1?'600':'400'}},l);
-      b.addEventListener('click',()=>{sonoQ=i+1;refreshCampos();});
-      qRow.appendChild(b);
-    });
-    qWrap.appendChild(qRow);wrap.appendChild(qWrap);
-    return wrap;
-  }
-
-  // ── CAMPOS NOITE ──
-  function buildCamposNoite(){
-    const wrap=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'}});
-
-    // Energia
-    const enWrap=el('div',{});
-    enWrap.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'10px'}},'⚡ como variou sua energia hoje'));
-    const enGrid=el('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}});
-    ['de manhã','agora / à noite'].forEach((lbl,side)=>{
-      const w=el('div',{});
-      w.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'6px',fontFamily:'monospace'}},lbl));
-      const row=el('div',{style:{display:'flex',gap:'5px'}});
-      [1,2,3,4,5].forEach(n=>{
-        const val=side===0?enI:enF;
-        const b=el('button',{style:{flex:'1',height:'28px',borderRadius:'6px',fontSize:'12px',fontWeight:'600',
-          background:val>=n?`${cor}35`:'rgba(255,255,255,0.04)',
-          border:`1px solid ${val>=n?cor:C.bd}`,
-          color:val>=n?cor:C.faint}},String(n));
-        b.addEventListener('click',()=>{if(side===0)enI=n;else enF=n;refreshCampos();});
-        row.appendChild(b);
-      });
-      w.appendChild(row);enGrid.appendChild(w);
-    });
-    enWrap.appendChild(enGrid);wrap.appendChild(enWrap);
-
-    // Humor
-    const hWrap=el('div',{});
-    hWrap.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'8px'}},'saldo de humor do dia'));
-    const hRow=el('div',{style:{display:'flex',gap:'6px'}});
-    HUMORES.forEach((e,i)=>{
-      const b=el('button',{style:{flex:'1',height:'36px',borderRadius:'8px',fontSize:'20px',
-        background:humor===i+1?`${cor}22`:'rgba(255,255,255,0.04)',
-        border:`1px solid ${humor===i+1?cor:C.bd}`}},e);
-      b.addEventListener('click',()=>{humor=i+1;refreshCampos();});
-      hRow.appendChild(b);
-    });
-    hWrap.appendChild(hRow);wrap.appendChild(hWrap);
-
-    // Alimentação
-    const aWrap=el('div',{});
-    aWrap.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'8px'}},'🥗 alimentação hoje'));
-    const aRow=el('div',{style:{display:'flex',gap:'6px'}});
-    ALIM_OPTS.forEach(a=>{
-      const b=el('button',{style:{flex:'1',padding:'7px 0',borderRadius:'8px',fontSize:'12px',
-        background:alim===a?`${cor}25`:'rgba(255,255,255,0.04)',
-        border:`1px solid ${alim===a?cor:C.bd}`,
-        color:alim===a?cor:C.faint,fontWeight:alim===a?'600':'400'}},a);
-      b.addEventListener('click',()=>{alim=a;refreshCampos();});
-      aRow.appendChild(b);
-    });
-    aWrap.appendChild(aRow);wrap.appendChild(aWrap);
-
-    // Sintoma
-    const sWrap=el('div',{});
-    sWrap.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'6px'}},'🤒 algum sintoma hoje'));
-    const sInp=el('input',{type:'text',placeholder:'ex: dor de cabeça, cansaço fora do comum…',style:{width:'100%',background:'rgba(255,255,255,0.06)',border:`1px solid ${C.bd}`,borderRadius:'8px',padding:'9px 12px',color:C.text,fontSize:'16px',boxSizing:'border-box',outline:'none'}});
-    sInp.value=sintomaNoite;sInp.addEventListener('input',e=>sintomaNoite=e.target.value);
-    sWrap.appendChild(sInp);wrap.appendChild(sWrap);
-    return wrap;
-  }
-
-  // Refresca só os campos opcionais (botões de seleção)
-  function refreshCampos(){
-    const camposBox=content.querySelector('.campos-box');
-    if(camposBox){
-      const inner=camposBox.querySelector('.campos-inner');
-      if(inner){inner.remove();}
-      const novo=el('div',{class:'campos-inner'});
-      novo.appendChild(momento==='manha'?buildCamposManha():buildCamposNoite());
-      camposBox.appendChild(novo);
-    } else {showForm();}
-  }
-
-  // ── LOADING ──
-  function showLoading(msg){
-    fase='loading';updateNavBtns('form');
-    content.innerHTML='';
-    const wrap=el('div',{style:{textAlign:'center',padding:'72px 0'}});
-    wrap.appendChild(el('div',{style:{width:'44px',height:'44px',borderRadius:'50%',border:`3px solid ${cor}20`,borderTop:`3px solid ${cor}`,margin:'0 auto 20px',animation:'spin 0.9s linear infinite'}}));
-    wrap.appendChild(el('div',{style:{color:C.muted,fontSize:'14px'}},msg));
-    content.appendChild(wrap);
-  }
-
-  // ── INSIGHT ──
-  function showInsight(text){
-    fase='insight';updateNavBtns('form');
-    content.innerHTML='';
-    const wrap=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'},class:'fade'});
-    const card=el('div',{style:{background:`linear-gradient(135deg,${cor}18,${cor}06)`,border:`1px solid ${cor}30`,borderRadius:'20px',padding:'28px 22px'}});
-    card.appendChild(el('div',{style:{fontSize:'10px',color:cor,letterSpacing:'0.12em',textTransform:'uppercase',fontFamily:'monospace',marginBottom:'16px'}},momento==='manha'?'🌤 bom dia':'🌙 boa noite'));
-    card.appendChild(el('div',{style:{fontSize:'17px',lineHeight:'1.78',color:C.text}},text));
-    wrap.appendChild(card);
-    const row=el('div',{style:{display:'flex',gap:'10px'}});
-    const nb=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',background:C.sf,border:`1px solid ${C.bd}`,color:C.muted,fontSize:'14px'}},'novo check-in');
-    nb.addEventListener('click',()=>{resetForm();showForm();});
-    const hb=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',background:`${cor}12`,border:`1px solid ${cor}40`,color:cor,fontSize:'14px'}},'ver histórico');
-    hb.addEventListener('click',()=>showHistorico());
-    row.appendChild(nb);row.appendChild(hb);wrap.appendChild(row);
-    content.appendChild(wrap);
-  }
-
-  // ── ANÁLISE ──
-  function showAnalise(text){
-    fase='analise';updateNavBtns('form');
-    content.innerHTML='';
-    const wrap=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'},class:'fade'});
-    const card=el('div',{style:{background:`linear-gradient(135deg,rgba(26,16,64,0.9),${cor}20)`,border:`1px solid ${cor}40`,borderRadius:'20px',padding:'28px 22px'}});
-    card.appendChild(el('div',{style:{fontSize:'10px',color:cor,letterSpacing:'0.12em',textTransform:'uppercase',fontFamily:'monospace',marginBottom:'16px'}},`✦ reflexão da semana · ${profile.nome}`));
-    card.appendChild(el('div',{style:{fontSize:'16px',lineHeight:'1.8',color:C.text}},text));
-    wrap.appendChild(card);
-    const vb=el('button',{style:{padding:'12px 0',borderRadius:'12px',background:C.sf,border:`1px solid ${C.bd}`,color:C.muted,fontSize:'14px',width:'100%'}},'voltar');
-    vb.addEventListener('click',()=>{resetForm();showForm();});
-    wrap.appendChild(vb);
-    content.appendChild(wrap);
-  }
-
-  // ── HISTÓRICO ──
-  function showHistorico(){
-    fase='historico';updateNavBtns('historico');
-    content.innerHTML='';
-    const wrap=el('div',{style:{display:'flex',flexDirection:'column',gap:'12px'}});
-
-    if(checkins.length===0){
-      wrap.appendChild(el('div',{style:{textAlign:'center',padding:'56px 0',color:C.faint,fontSize:'14px'}},'nenhum check-in ainda.'));
-    } else {
-      // Calendário mini
-      const dias=[...new Set(checkins.map(c=>c.data))].sort().slice(-7);
-      const cal=el('div',{style:{display:'flex',gap:'6px',padding:'14px 16px',background:C.sf,borderRadius:'14px',border:`1px solid ${C.bd}`,marginBottom:'4px'}});
-      dias.forEach(d_=>{
-        const m=checkins.find(c=>c.data===d_&&c.momento==='manha');
-        const n=checkins.find(c=>c.data===d_&&c.momento==='noite');
-        const col=el('div',{style:{flex:'1',textAlign:'center'}});
-        col.appendChild(el('div',{style:{fontSize:'10px',color:d_===today()?cor:C.faint,marginBottom:'5px',fontFamily:'monospace'}},wday(d_)));
-        const bars=el('div',{style:{display:'flex',flexDirection:'column',gap:'3px'}});
-        bars.appendChild(el('div',{style:{height:'5px',borderRadius:'3px',background:m?cor:'rgba(255,255,255,0.07)'}}));
-        bars.appendChild(el('div',{style:{height:'5px',borderRadius:'3px',background:n?`${cor}88`:'rgba(255,255,255,0.07)'}}));
-        col.appendChild(bars);cal.appendChild(col);
-      });
-      wrap.appendChild(cal);
-
-      // Items
-      [...checkins].reverse().forEach(c=>{
-        const item=el('div',{style:{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'14px',padding:'14px 16px'}});
-        const top=el('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}});
-        top.appendChild(el('div',{style:{fontSize:'11px',color:cor,fontFamily:'monospace'}},`${fmtDate(c.data)} · ${c.momento==='manha'?'🌤 manhã':'🌙 noite'}`));
-        const meta=el('div',{style:{display:'flex',gap:'8px',fontSize:'12px',color:C.muted}});
-        if(c.momento==='manha'&&c.dados?.sono_horas)meta.appendChild(document.createTextNode(`😴 ${c.dados.sono_horas}h`));
-        if(c.momento==='noite'&&c.dados?.energia_inicio)meta.appendChild(document.createTextNode(`⚡ ${c.dados.energia_inicio}→${c.dados.energia_fim??'?'}`));
-        if(c.dados?.humor)meta.appendChild(document.createTextNode(HUMORES[HUMOR_LBL.indexOf(c.dados.humor)]??'😐'));
-        top.appendChild(meta);item.appendChild(top);
-        item.appendChild(el('div',{style:{fontSize:'13px',color:'rgba(255,255,255,0.42)',lineHeight:'1.55',fontStyle:'italic'}},`"${c.texto_original}"`));
-        if((c.dados?.sintomas||[]).length>0){
-          const tags=el('div',{style:{marginTop:'8px',display:'flex',gap:'5px',flexWrap:'wrap'}});
-          c.dados.sintomas.forEach(s=>tags.appendChild(el('div',{style:{fontSize:'11px',background:`${cor}20`,color:cor,borderRadius:'20px',padding:'2px 10px'}},s)));
-          item.appendChild(tags);
-        }
-        wrap.appendChild(item);
-      });
-    }
-
-    const nb=el('button',{style:{padding:'13px 0',borderRadius:'14px',background:`linear-gradient(135deg,${cor}80,${cor})`,border:'none',color:'#fff',fontSize:'14px',fontWeight:'600',marginTop:'4px',width:'100%'}},'novo check-in');
-    nb.addEventListener('click',()=>{resetForm();showForm();});
-    wrap.appendChild(nb);
-    if(checkins.length>=4){
-      const ab=el('button',{style:{padding:'12px 0',borderRadius:'14px',background:`${cor}10`,border:`1px solid ${cor}40`,color:cor,fontSize:'14px',width:'100%'}},`✦ análise da semana`);
-      ab.addEventListener('click',handleAnalise);
-      wrap.appendChild(ab);
-    }
-    content.appendChild(wrap);
-  }
-
-  // ── RESET ──
-  function resetForm(){
-    resetRec();
-    texto='';isInterim='';recStatus='idle';voiceErr='';
-    sono='';sonoQ=0;sintomaManha='';
-    enI=0;enF=0;humor=0;alim='';sintomaNoite='';
-    insight='';analise='';
-  }
-
-  // ── SUBMIT ──
-  async function handleSubmit(){
-    if(!texto.trim())return;
-    if(recStatus==='recording')stopRec(t=>{texto=t;});
-    showLoading('Processando seu check-in…');
-    const extras=momento==='manha'
-      ?{sono_horas:sono||null,sono_q:sonoQ||null,sintoma:sintomaManha||null}
-      :{energia_i:enI||null,energia_f:enF||null,humor:humor?HUMOR_LBL[humor-1]:null,alim:alim||null,sintoma:sintomaNoite||null};
-    let dados={};
-    try{
-      showLoading('Entendendo o que você disse…');
-      const raw=await callClaude(buildExtractor(texto,momento,extras));
-      dados=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    }catch{dados={...extras,nota_livre:texto,contexto_momento:momento,sintomas:extras.sintoma?[extras.sintoma]:[]};}
-    const novo={id:Date.now(),data:today(),momento,texto_original:texto,dados};
-    checkins=[...checkins,novo];
-    saveCheckins(profile.id,checkins);
-    showLoading('Preparando seu insight…');
-    const hist=checkins.slice(-14).filter(c=>c.id!==novo.id);
-    try{
-      const ins=await callClaude(buildInsight(dados,hist,profile.nome,momento));
-      showInsight(ins);
-    }catch{showInsight('Erro ao gerar insight. Verifique sua API key.');}
-  }
-
-  async function handleAnalise(){
-    showLoading('Analisando sua semana…');
-    try{
-      const r=await callClaude(buildAnalise(checkins.slice(-14),profile.nome));
-      showAnalise(r);
-    }catch{showAnalise('Erro ao gerar análise. Verifique sua API key.');}
-  }
-
-  // Inicia na tela de form
-  showForm();
-  return root;
-}
-
-// ── EL HELPER ─────────────────────────────────────────────────
+// ── DOM HELPER ────────────────────────────────────────────────
 function el(tag,attrs,...kids){
   const e=document.createElement(tag);
   if(attrs)Object.entries(attrs).forEach(([k,v])=>{
     if(k==='style'&&typeof v==='object')Object.assign(e.style,v);
     else if(k==='class')e.className=v;
     else if(k.startsWith('on'))e.addEventListener(k.slice(2).toLowerCase(),v);
-    else if(['placeholder','type','rows','min','max','step','title'].includes(k))e[k]=v;
+    else if(['placeholder','type','rows','min','max','step','title','inputmode'].includes(k))e[k]=v;
     else if(k==='disabled'&&v)e.disabled=true;
     else e.setAttribute(k,v);
   });
@@ -841,13 +176,549 @@ function buildLogo(sub){
   const t=el('div',{style:{fontSize:'32px',fontWeight:'700',letterSpacing:'-0.03em',marginBottom:'8px'}});
   t.innerHTML=`<span style="color:rgba(255,255,255,0.28);font-weight:300">meu</span><span style="color:#fff">d</span><span style="color:${C.lav}">IA</span><span style="color:#fff">rio</span>`;
   w.appendChild(t);
-  w.appendChild(el('div',{style:{fontSize:'13px',color:C.faint,fontFamily:'monospace',letterSpacing:'0.08em'}},sub));
+  if(sub)w.appendChild(el('div',{style:{fontSize:'13px',color:C.faint,fontFamily:'monospace',letterSpacing:'0.08em'}},sub));
   return w;
 }
 
+// ── ROUTER ────────────────────────────────────────────────────
+let currentScreen='setup';
+let currentProfile=null;
+function navigate(screen,profile){
+  currentScreen=screen;currentProfile=profile||null;
+  const app=document.getElementById('app');app.innerHTML='';
+  if(screen==='setup')       app.appendChild(buildSetup());
+  else if(screen==='select') app.appendChild(buildSelect());
+  else if(screen==='newprofile') app.appendChild(buildNewProfile());
+  else if(screen==='pin')    app.appendChild(buildPin(profile));
+  else if(screen==='app')    app.appendChild(buildApp(profile));
+}
+
+// ── SCREEN: SETUP ─────────────────────────────────────────────
+function buildSetup(){
+  const wrap=el('div',{style:{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px'}});
+  wrap.appendChild(buildLogo('configure para começar'));
+  const card=el('div',{style:{width:'100%',maxWidth:'380px',background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'20px',padding:'28px 24px',display:'flex',flexDirection:'column',gap:'16px'}});
+  card.appendChild(el('p',{style:{fontSize:'13px',color:C.muted,lineHeight:'1.6'}},'Para funcionar, o app precisa de uma ',el('strong',{style:{color:C.lav}},'API Key da Anthropic'),'. Ela fica salva só neste dispositivo.'));
+  const keyWrap=el('div',{style:{position:'relative'}});
+  const keyInput=el('input',{type:'password',placeholder:'sk-ant-...',style:{width:'100%',background:'rgba(255,255,255,0.07)',border:`1px solid ${C.bd}`,borderRadius:'10px',padding:'12px 44px 12px 14px',color:C.text,fontSize:'16px',outline:'none',boxSizing:'border-box'}});
+  keyInput.value=getApiKey();
+  let showKey=false;
+  const eye=el('button',{style:{position:'absolute',right:'12px',top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:C.faint,fontSize:'18px',padding:'4px',lineHeight:'1'}},'👁');
+  eye.addEventListener('click',()=>{showKey=!showKey;keyInput.type=showKey?'text':'password';eye.textContent=showKey?'🙈':'👁';});
+  keyWrap.appendChild(keyInput);keyWrap.appendChild(eye);
+  const keySection=el('div',{});
+  keySection.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'API Key'));
+  keySection.appendChild(keyWrap);
+  card.appendChild(keySection);
+  card.appendChild(el('p',{style:{fontSize:'11px',color:C.faint,lineHeight:'1.5'}},'Acesse ',el('strong',{},'console.anthropic.com'),' → Settings → API Keys → Create Key'));
+  const saveBtn=el('button',{style:{padding:'13px 0',borderRadius:'12px',border:'none',background:'linear-gradient(135deg,#4A2D8A,#9B6FE8)',color:'#fff',fontSize:'15px',fontWeight:'600',width:'100%'}},'salvar e começar');
+  saveBtn.addEventListener('click',()=>{const k=keyInput.value.trim();if(!k){alert('Cole sua API key para continuar.');return;}if(setApiKey(k))navigate('select');else alert('Erro ao salvar. Tente novamente.');});
+  card.appendChild(saveBtn);
+  if(getApiKey()){const skip=el('button',{style:{padding:'10px 0',borderRadius:'12px',border:`1px solid ${C.bd}`,background:'transparent',color:C.faint,fontSize:'13px',width:'100%'}},'já configurado — continuar →');skip.addEventListener('click',()=>navigate('select'));card.appendChild(skip);}
+  wrap.appendChild(card);
+  return wrap;
+}
+
+// ── SCREEN: SELECT ────────────────────────────────────────────
+function buildSelect(){
+  let editMode=false;
+  const wrap=el('div',{style:{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'28px 20px'}});
+  wrap.appendChild(buildLogo('quem está fazendo o check-in?'));
+
+  // Subtítulo de modo edição
+  const editHint=el('div',{style:{fontSize:'12px',color:C.red,fontFamily:'monospace',letterSpacing:'0.06em',marginBottom:'12px',height:'18px',textAlign:'center',opacity:'0',transition:'opacity 0.2s'}},'modo edição — toque no ✕ para excluir');
+  wrap.appendChild(editHint);
+
+  const gridWrap=el('div',{style:{width:'100%',maxWidth:'460px'}});
+  wrap.appendChild(gridWrap);
+
+  function renderGrid(){
+    gridWrap.innerHTML='';
+    const profiles=loadProfiles();
+    const cols=profiles.length<=1?'1fr':profiles.length===2?'1fr 1fr':'repeat(auto-fill,minmax(130px,1fr))';
+    const grid=el('div',{style:{display:'grid',gridTemplateColumns:cols,gap:'12px'}});
+
+    profiles.forEach(p=>{
+      const pal=getPal(p.cor);
+      const count=loadCheckins(p.id).length;
+
+      // Wrapper com posição relativa para o botão de excluir
+      const cardWrap=el('div',{style:{position:'relative'}});
+
+      const btn=el('button',{style:{width:'100%',padding:'22px 12px',borderRadius:'18px',border:`1.5px solid ${editMode?C.red+'60':pal.cor+'44'}`,background:editMode?'rgba(196,64,74,0.06)':`${pal.cor}0D`,display:'flex',flexDirection:'column',alignItems:'center',gap:'10px',transition:'all 0.2s'}});
+      btn.appendChild(el('div',{style:{fontSize:'44px',lineHeight:'1'}},p.emoji));
+      btn.appendChild(el('div',{style:{fontSize:'16px',fontWeight:'600',color:editMode?C.muted:pal.cor}},p.nome));
+      btn.appendChild(el('div',{style:{display:'flex',alignItems:'center',gap:'5px'}},
+        p.pin?el('span',{style:{fontSize:'11px',color:C.faint}},'🔒'):null,
+        el('span',{style:{fontSize:'10px',color:C.faint,fontFamily:'monospace'}},`${count} registro${count!==1?'s':''}`)
+      ));
+
+      // Clique normal = entrar; clique longo = modo edição
+      let pressTimer=null;
+      btn.addEventListener('pointerdown',()=>{pressTimer=setTimeout(()=>{editMode=true;renderGrid();},600);});
+      btn.addEventListener('pointerup',()=>clearTimeout(pressTimer));
+      btn.addEventListener('pointercancel',()=>clearTimeout(pressTimer));
+      btn.addEventListener('click',()=>{if(!editMode){p.pin?navigate('pin',p):navigate('app',p);}});
+
+      cardWrap.appendChild(btn);
+
+      // Botão excluir — aparece no modo edição
+      if(editMode){
+        const delBtn=el('button',{style:{position:'absolute',top:'-8px',right:'-8px',width:'28px',height:'28px',borderRadius:'50%',background:C.red,border:'2px solid #0D0D1A',color:'#fff',fontSize:'14px',fontWeight:'700',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:'1',zIndex:'10'}},'✕');
+        delBtn.addEventListener('click',e=>{
+          e.stopPropagation();
+          const nome=p.nome;
+          const count2=loadCheckins(p.id).length;
+          const msg=count2>0
+            ?`Excluir o perfil "${nome}"?\n\n⚠️ Isso apagará ${count2} registro${count2!==1?'s':''} permanentemente.\n\nDigite EXCLUIR para confirmar:`
+            :`Excluir o perfil "${nome}"? Esta ação não pode ser desfeita.`;
+          if(count2>0){
+            const confirmado=prompt(msg);
+            if(confirmado?.trim().toUpperCase()!=='EXCLUIR')return;
+          } else {
+            if(!confirm(msg))return;
+          }
+          // Remove perfil e dados
+          const lista=loadProfiles().filter(x=>x.id!==p.id);
+          saveProfiles(lista);
+          try{localStorage.removeItem(SK_CHECKINS(p.id));}catch{}
+          if(lista.length===0)editMode=false;
+          renderGrid();
+        });
+        cardWrap.appendChild(delBtn);
+      }
+
+      grid.appendChild(cardWrap);
+    });
+
+    // Botão adicionar
+    const addBtn=el('button',{style:{padding:'22px 12px',borderRadius:'18px',border:`1.5px dashed ${C.bd}`,background:'transparent',display:'flex',flexDirection:'column',alignItems:'center',gap:'10px',color:C.faint,width:'100%',opacity:editMode?'0.3':'1'}});
+    addBtn.appendChild(el('div',{style:{fontSize:'32px',lineHeight:'1'}},'+'));
+    addBtn.appendChild(el('div',{style:{fontSize:'13px'}},'novo perfil'));
+    addBtn.addEventListener('click',()=>{if(!editMode)navigate('newprofile');});
+    const addWrap=el('div',{});addWrap.appendChild(addBtn);
+    grid.appendChild(addWrap);
+
+    gridWrap.appendChild(grid);
+  }
+
+  renderGrid();
+
+  // Rodapé
+  const footer=el('div',{style:{display:'flex',gap:'16px',marginTop:'20px',alignItems:'center'}});
+
+  const cfg=el('button',{style:{background:'transparent',border:'none',color:C.faint,fontSize:'11px',fontFamily:'monospace',letterSpacing:'0.06em'}},'⚙ alterar API key');
+  cfg.addEventListener('click',()=>navigate('setup'));
+
+  const editBtn=el('button',{style:{background:'transparent',border:`1px solid ${C.bd}`,borderRadius:'20px',padding:'5px 14px',color:C.faint,fontSize:'11px',fontFamily:'monospace',letterSpacing:'0.06em'}},'✏ editar perfis');
+  editBtn.addEventListener('click',()=>{
+    editMode=!editMode;
+    editBtn.textContent=editMode?'✓ concluído':'✏ editar perfis';
+    editBtn.style.color=editMode?C.red:C.faint;
+    editBtn.style.border=`1px solid ${editMode?C.red+'60':C.bd}`;
+    editHint.style.opacity=editMode?'1':'0';
+    renderGrid();
+  });
+
+  footer.appendChild(cfg);
+  footer.appendChild(editBtn);
+  wrap.appendChild(footer);
+  return wrap;
+}
+
+// ── SCREEN: PIN ───────────────────────────────────────────────
+function buildPin(profile){
+  const pal=getPal(profile.cor);
+  const cor=pal.cor;
+  const wrap=el('div',{style:{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'32px 24px'}});
+  wrap.appendChild(buildLogo(null));
+
+  const card=el('div',{style:{width:'100%',maxWidth:'320px',display:'flex',flexDirection:'column',alignItems:'center',gap:'24px'}});
+
+  // Avatar
+  const avatar=el('div',{style:{width:'72px',height:'72px',borderRadius:'50%',background:`${cor}25`,border:`2px solid ${cor}50`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'36px'}},profile.emoji);
+  card.appendChild(avatar);
+  card.appendChild(el('div',{style:{fontSize:'18px',fontWeight:'600',color:cor,textAlign:'center'}},profile.nome));
+  card.appendChild(el('div',{style:{fontSize:'13px',color:C.faint,textAlign:'center'}},'digite seu PIN para entrar'));
+
+  // Dots de exibição
+  const dotsWrap=el('div',{style:{display:'flex',gap:'12px',justifyContent:'center',marginTop:'8px'}});
+  const dots=[];
+  for(let i=0;i<4;i++){
+    const d=el('div',{style:{width:'14px',height:'14px',borderRadius:'50%',border:`2px solid ${C.bd}`,background:'transparent',transition:'all 0.15s'}});
+    dots.push(d);dotsWrap.appendChild(d);
+  }
+  card.appendChild(dotsWrap);
+
+  // Mensagem de erro
+  const errMsg=el('div',{style:{fontSize:'12px',color:C.red,textAlign:'center',height:'18px',transition:'opacity 0.2s',opacity:'0'}},'PIN incorreto');
+  card.appendChild(errMsg);
+
+  // PIN atual
+  let pinDigits='';
+  function updateDots(){
+    dots.forEach((d,i)=>{
+      d.style.background=i<pinDigits.length?cor:'transparent';
+      d.style.borderColor=i<pinDigits.length?cor:C.bd;
+    });
+  }
+  async function checkPin(){
+    const hash=await hashPin(pinDigits);
+    if(hash===profile.pin){navigate('app',profile);}
+    else{
+      errMsg.style.opacity='1';
+      dotsWrap.classList.add('shake');
+      setTimeout(()=>{dotsWrap.classList.remove('shake');errMsg.style.opacity='0';pinDigits='';updateDots();},600);
+    }
+  }
+
+  // Teclado numérico
+  const pad=el('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'12px',width:'240px'}});
+  [1,2,3,4,5,6,7,8,9,'','0','⌫'].forEach(k=>{
+    if(k===''){pad.appendChild(el('div',{}));return;}
+    const b=el('button',{style:{height:'60px',borderRadius:'14px',border:`1px solid ${C.bd}`,background:C.sf,color:C.text,fontSize:k==='⌫'?'20px':'22px',fontWeight:'500',transition:'all 0.1s'}},String(k));
+    b.addEventListener('click',()=>{
+      if(k==='⌫'){if(pinDigits.length>0){pinDigits=pinDigits.slice(0,-1);updateDots();}}
+      else if(pinDigits.length<4){pinDigits+=k;updateDots();if(pinDigits.length===4)checkPin();}
+    });
+    pad.appendChild(b);
+  });
+  card.appendChild(pad);
+
+  // Voltar
+  const back=el('button',{style:{marginTop:'8px',background:'transparent',border:'none',color:C.faint,fontSize:'13px'}},'← voltar');
+  back.addEventListener('click',()=>navigate('select'));
+  card.appendChild(back);
+
+  wrap.appendChild(card);
+  return wrap;
+}
+
+// ── SCREEN: NEW PROFILE ───────────────────────────────────────
+function buildNewProfile(){
+  let npNome='',npEmoji='👤',npCor='violet',npPin='',npPinConfirm='',npStep=0;
+  // npStep: 0=dados, 1=definir pin, 2=confirmar pin
+
+  const wrap=el('div',{style:{minHeight:'100vh',background:C.bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'28px 20px'}});
+  wrap.appendChild(buildLogo('novo perfil'));
+
+  const container=el('div',{style:{width:'100%',maxWidth:'380px'}});
+  wrap.appendChild(container);
+
+  function renderStep(){
+    container.innerHTML='';
+
+    // STEP 0: dados do perfil
+    if(npStep===0){
+      const card=el('div',{style:{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'20px',padding:'28px 24px',display:'flex',flexDirection:'column',gap:'20px'}});
+
+      // Preview
+      const pal=getPal(npCor);
+      const prev=el('div',{style:{display:'flex',alignItems:'center',gap:'14px',padding:'16px',background:`${pal.cor}0D`,border:`1px solid ${pal.cor}30`,borderRadius:'14px'}});
+      const prevEmoji=el('div',{style:{fontSize:'40px',lineHeight:'1'}},npEmoji);
+      const prevNome=el('div',{style:{fontSize:'20px',fontWeight:'700',color:pal.cor}},npNome||'Nome');
+      prev.appendChild(prevEmoji);
+      const pm=el('div',{});pm.appendChild(prevNome);pm.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginTop:'2px',fontFamily:'monospace'}},'novo perfil'));prev.appendChild(pm);
+      card.appendChild(prev);
+
+      function refreshPreview(){
+        const p2=getPal(npCor);
+        prevEmoji.textContent=npEmoji;prevNome.textContent=npNome||'Nome';prevNome.style.color=p2.cor;
+        prev.style.background=`${p2.cor}0D`;prev.style.border=`1px solid ${p2.cor}30`;
+      }
+
+      // Nome
+      const ns=el('div',{});ns.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'nome'));
+      const ni=el('input',{type:'text',placeholder:'ex: Igor, Maria…',style:{width:'100%',background:'rgba(255,255,255,0.07)',border:`1px solid ${C.bd}`,borderRadius:'10px',padding:'12px 14px',color:C.text,fontSize:'16px',outline:'none',boxSizing:'border-box'}});
+      ni.value=npNome;ni.addEventListener('input',e=>{npNome=e.target.value;refreshPreview();});
+      ns.appendChild(ni);card.appendChild(ns);
+
+      // Emoji
+      const es=el('div',{});es.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'emoji'));
+      const eg=el('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px'}});
+      const eBtns={};
+      EMOJIS.forEach(e=>{
+        const b=el('button',{style:{padding:'6px',borderRadius:'8px',border:`1px solid ${npEmoji===e?getPal(npCor).cor:C.bd}`,background:npEmoji===e?`${getPal(npCor).cor}20`:'transparent',fontSize:'22px',lineHeight:'1'}},e);
+        b.addEventListener('click',()=>{npEmoji=e;Object.values(eBtns).forEach(x=>{x.style.border=`1px solid ${C.bd}`;x.style.background='transparent';});b.style.border=`1px solid ${getPal(npCor).cor}`;b.style.background=`${getPal(npCor).cor}20`;refreshPreview();});
+        eBtns[e]=b;eg.appendChild(b);
+      });
+      es.appendChild(eg);card.appendChild(es);
+
+      // Cor
+      const cs=el('div',{});cs.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'8px',fontFamily:'monospace',letterSpacing:'0.06em',textTransform:'uppercase'}},'cor'));
+      const cg=el('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px'}});
+      const cBtns={};
+      PALETTE.forEach(p=>{
+        const b=el('button',{style:{width:'36px',height:'36px',borderRadius:'50%',border:`2px solid ${p.id===npCor?'#fff':p.cor+'44'}`,background:p.cor,boxShadow:p.id===npCor?`0 0 0 3px ${p.cor}66`:'none',transition:'all 0.15s'},title:p.label});
+        b.addEventListener('click',()=>{
+          npCor=p.id;
+          Object.values(cBtns).forEach(x=>{x.style.border=`2px solid ${x._c}44`;x.style.boxShadow='none';});
+          b.style.border='2px solid #fff';b.style.boxShadow=`0 0 0 3px ${p.cor}66`;
+          refreshPreview();
+          if(eBtns[npEmoji]){Object.values(eBtns).forEach(x=>{x.style.border=`1px solid ${C.bd}`;x.style.background='transparent';});eBtns[npEmoji].style.border=`1px solid ${p.cor}`;eBtns[npEmoji].style.background=`${p.cor}20`;}
+        });
+        b._c=p.cor;cBtns[p.id]=b;cg.appendChild(b);
+      });
+      cBtns['violet'].style.border='2px solid #fff';cBtns['violet'].style.boxShadow=`0 0 0 3px ${getPal('violet').cor}66`;
+      cs.appendChild(cg);card.appendChild(cs);
+
+      // Botões
+      const br=el('div',{style:{display:'flex',gap:'10px'}});
+      const cb=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',border:`1px solid ${C.bd}`,background:'transparent',color:C.faint,fontSize:'14px'}},'cancelar');
+      cb.addEventListener('click',()=>navigate('select'));
+      const nb=el('button',{style:{flex:'2',padding:'12px 0',borderRadius:'12px',border:'none',background:`linear-gradient(135deg,${getPal(npCor).cor}88,${getPal(npCor).cor})`,color:'#fff',fontSize:'15px',fontWeight:'600'}},'próximo →');
+      nb.addEventListener('click',()=>{if(!npNome.trim()){alert('Digite um nome para o perfil.');return;}npStep=1;renderStep();});
+      br.appendChild(cb);br.appendChild(nb);card.appendChild(br);
+      container.appendChild(card);
+    }
+
+    // STEP 1: definir PIN
+    else if(npStep===1){
+      renderPinStep('criar PIN de acesso','Este PIN protege o seu perfil.',false,(digits)=>{npPin=digits;npStep=2;renderStep();},()=>{npStep=0;renderStep();});
+    }
+
+    // STEP 2: confirmar PIN
+    else if(npStep===2){
+      renderPinStep('confirmar PIN','Digite o PIN novamente para confirmar.',true,async(digits)=>{
+        if(digits!==npPin){return false;}
+        const hash=digits?await hashPin(digits):null;
+        const novo={id:uid(),nome:npNome.trim(),emoji:npEmoji,cor:npCor,pin:hash};
+        const lista=[...loadProfiles(),novo];
+        saveProfiles(lista);
+        navigate('select');
+        return true;
+      },()=>{npStep=1;renderStep();});
+    }
+  }
+
+  function renderPinStep(title,subtitle,isConfirm,onComplete,onBack){
+    const pal=getPal(npCor);const cor=pal.cor;
+    const wrap2=el('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'20px'}});
+    wrap2.appendChild(el('div',{style:{fontSize:'40px',lineHeight:'1',textAlign:'center'}},npEmoji));
+    wrap2.appendChild(el('div',{style:{fontSize:'17px',fontWeight:'600',color:cor,textAlign:'center'}},title));
+    wrap2.appendChild(el('div',{style:{fontSize:'13px',color:C.faint,textAlign:'center',lineHeight:'1.5'}},subtitle));
+
+    // Opção sem PIN (só no step 1)
+    if(!isConfirm){
+      const skip=el('button',{style:{fontSize:'12px',color:C.faint,background:'transparent',border:`1px solid ${C.bd}`,borderRadius:'20px',padding:'5px 14px'}},'entrar sem PIN');
+      skip.addEventListener('click',async()=>{
+        const novo={id:uid(),nome:npNome.trim(),emoji:npEmoji,cor:npCor,pin:null};
+        saveProfiles([...loadProfiles(),novo]);navigate('select');
+      });
+      wrap2.appendChild(skip);
+    }
+
+    // Dots
+    const dotsWrap=el('div',{style:{display:'flex',gap:'12px',justifyContent:'center'}});
+    const dots=[];
+    for(let i=0;i<4;i++){const d=el('div',{style:{width:'14px',height:'14px',borderRadius:'50%',border:`2px solid ${C.bd}`,background:'transparent',transition:'all 0.15s'}});dots.push(d);dotsWrap.appendChild(d);}
+    wrap2.appendChild(dotsWrap);
+
+    const err=el('div',{style:{fontSize:'12px',color:C.red,textAlign:'center',height:'16px',opacity:'0'}},'PINs não coincidem');
+    wrap2.appendChild(err);
+
+    let digits='';
+    function updDots(){dots.forEach((d,i)=>{d.style.background=i<digits.length?cor:'transparent';d.style.borderColor=i<digits.length?cor:C.bd;});}
+
+    const pad=el('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'10px',width:'220px'}});
+    [1,2,3,4,5,6,7,8,9,'','0','⌫'].forEach(k=>{
+      if(k===''){pad.appendChild(el('div',{}));return;}
+      const b=el('button',{style:{height:'56px',borderRadius:'12px',border:`1px solid ${C.bd}`,background:C.sf,color:C.text,fontSize:k==='⌫'?'18px':'20px',fontWeight:'500'}},String(k));
+      b.addEventListener('click',async()=>{
+        if(k==='⌫'){if(digits.length>0){digits=digits.slice(0,-1);updDots();}}
+        else if(digits.length<4){digits+=k;updDots();
+          if(digits.length===4){
+            const result=await onComplete(digits);
+            if(result===false){err.style.opacity='1';dotsWrap.classList.add('shake');setTimeout(()=>{dotsWrap.classList.remove('shake');err.style.opacity='0';digits='';updDots();},600);}
+          }
+        }
+      });
+      pad.appendChild(b);
+    });
+    wrap2.appendChild(pad);
+
+    const back=el('button',{style:{background:'transparent',border:'none',color:C.faint,fontSize:'13px'}},'← voltar');
+    back.addEventListener('click',onBack);
+    wrap2.appendChild(back);
+    container.appendChild(wrap2);
+  }
+
+  renderStep();
+  return wrap;
+}
+
+// ── SCREEN: APP ───────────────────────────────────────────────
+function buildApp(profile){
+  const pal=getPal(profile.cor);const cor=pal.cor;
+  let checkins=loadCheckins(profile.id);
+  let momento='manha',fase='form';
+  let texto='',isInterim=false,recStatus='idle',voiceErr='';
+  let sono='',sonoQ=0,sintomaManha='';
+  let enI=0,enF=0,humor=0,alim='',sintomaNoite='';
+  const jaFezHoje=m=>checkins.some(c=>c.data===today()&&c.momento===m);
+
+  const root=el('div',{style:{minHeight:'100vh',background:C.bg,color:C.text}});
+
+  // Header
+  const header=el('div',{style:{background:pal.grad,padding:'22px 20px 18px'}});
+  const hi=el('div',{style:{maxWidth:'460px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between'}});
+  const logoSide=el('div',{style:{display:'flex',alignItems:'center',gap:'10px'}});
+  const avatar=el('div',{style:{width:'38px',height:'38px',borderRadius:'50%',background:`${cor}30`,border:`1.5px solid ${cor}60`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'18px'}},profile.emoji);
+  const logoText=el('div',{});
+  const ln=el('div',{style:{fontSize:'20px',fontWeight:'700',letterSpacing:'-0.02em',lineHeight:'1'}});
+  ln.innerHTML=`<span style="color:rgba(255,255,255,0.3);font-weight:300">meu</span><span style="color:#fff">d</span><span style="color:${cor}">IA</span><span style="color:#fff">rio</span>`;
+  const ls=el('div',{style:{fontSize:'10px',color:'rgba(255,255,255,0.28)',marginTop:'3px',fontFamily:'monospace',letterSpacing:'0.08em'}});
+  ls.textContent=`${profile.nome.toUpperCase()} · ${checkins.length} registro${checkins.length!==1?'s':''}`;
+  logoText.appendChild(ln);logoText.appendChild(ls);logoSide.appendChild(avatar);logoSide.appendChild(logoText);
+  const nav=el('div',{style:{display:'flex',gap:'7px'}});
+  const btnF=el('button',{style:{borderRadius:'20px',padding:'5px 12px',color:cor,fontSize:'11px',fontWeight:'500',border:`1px solid ${cor}80`,background:`${cor}25`}},'check-in');
+  const btnH=el('button',{style:{borderRadius:'20px',padding:'5px 12px',color:cor,fontSize:'11px',fontWeight:'500',border:'1px solid rgba(255,255,255,0.12)',background:'transparent'}},'histórico');
+  const btnB=el('button',{style:{borderRadius:'20px',padding:'5px 10px',color:C.faint,fontSize:'11px',border:'1px solid rgba(255,255,255,0.1)',background:'transparent'}},'↩');
+  btnF.addEventListener('click',()=>showForm());
+  btnH.addEventListener('click',()=>showHistorico());
+  btnB.addEventListener('click',()=>navigate('select'));
+  nav.appendChild(btnF);nav.appendChild(btnH);nav.appendChild(btnB);
+  hi.appendChild(logoSide);hi.appendChild(nav);header.appendChild(hi);root.appendChild(header);
+
+  const content=el('div',{style:{maxWidth:'460px',margin:'0 auto',padding:'20px 18px 60px'}});
+  root.appendChild(content);
+
+  function updNav(f){
+    btnF.style.background=f==='form'||f==='insight'?`${cor}25`:'transparent';
+    btnF.style.border=`1px solid ${f==='form'||f==='insight'?`${cor}80`:'rgba(255,255,255,0.12)'}`;
+    btnH.style.background=f==='historico'?`${cor}25`:'transparent';
+    btnH.style.border=`1px solid ${f==='historico'?`${cor}80`:'rgba(255,255,255,0.12)'}`;
+    ls.textContent=`${profile.nome.toUpperCase()} · ${checkins.length} registro${checkins.length!==1?'s':''}`;
+  }
+
+  function showLoading(msg){fase='loading';updNav('form');content.innerHTML='';const w=el('div',{style:{textAlign:'center',padding:'72px 0'}});w.appendChild(el('div',{style:{width:'44px',height:'44px',borderRadius:'50%',border:`3px solid ${cor}20`,borderTop:`3px solid ${cor}`,margin:'0 auto 20px',animation:'spin 0.9s linear infinite'}}));w.appendChild(el('div',{style:{color:C.muted,fontSize:'14px'}},msg));content.appendChild(w);}
+
+  function showInsight(text){fase='insight';updNav('form');content.innerHTML='';const w=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'},class:'fade'});const card=el('div',{style:{background:`linear-gradient(135deg,${cor}18,${cor}06)`,border:`1px solid ${cor}30`,borderRadius:'20px',padding:'28px 22px'}});card.appendChild(el('div',{style:{fontSize:'10px',color:cor,letterSpacing:'0.12em',textTransform:'uppercase',fontFamily:'monospace',marginBottom:'16px'}},momento==='manha'?'🌤 bom dia':'🌙 boa noite'));card.appendChild(el('div',{style:{fontSize:'17px',lineHeight:'1.78',color:C.text}},text));w.appendChild(card);const row=el('div',{style:{display:'flex',gap:'10px'}});const nb=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',background:C.sf,border:`1px solid ${C.bd}`,color:C.muted,fontSize:'14px'}},'novo check-in');nb.addEventListener('click',()=>{resetLocal();showForm();});const hb=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',background:`${cor}12`,border:`1px solid ${cor}40`,color:cor,fontSize:'14px'}},'ver histórico');hb.addEventListener('click',()=>showHistorico());row.appendChild(nb);row.appendChild(hb);w.appendChild(row);content.appendChild(w);}
+
+  function showAnalise(text){fase='analise';updNav('form');content.innerHTML='';const w=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'},class:'fade'});const card=el('div',{style:{background:`linear-gradient(135deg,rgba(26,16,64,0.9),${cor}20)`,border:`1px solid ${cor}40`,borderRadius:'20px',padding:'28px 22px'}});card.appendChild(el('div',{style:{fontSize:'10px',color:cor,letterSpacing:'0.12em',textTransform:'uppercase',fontFamily:'monospace',marginBottom:'16px'}},`✦ reflexão da semana · ${profile.nome}`));card.appendChild(el('div',{style:{fontSize:'16px',lineHeight:'1.8',color:C.text}},text));w.appendChild(card);const vb=el('button',{style:{padding:'12px 0',borderRadius:'12px',background:C.sf,border:`1px solid ${C.bd}`,color:C.muted,fontSize:'14px',width:'100%'}},'voltar');vb.addEventListener('click',()=>{resetLocal();showForm();});w.appendChild(vb);content.appendChild(w);}
+
+  function showHistorico(){fase='historico';updNav('historico');content.innerHTML='';const w=el('div',{style:{display:'flex',flexDirection:'column',gap:'12px'}});
+    if(checkins.length===0){w.appendChild(el('div',{style:{textAlign:'center',padding:'56px 0',color:C.faint,fontSize:'14px'}},'nenhum check-in ainda.'));}
+    else{
+      const dias=[...new Set(checkins.map(c=>c.data))].sort().slice(-7);
+      const cal=el('div',{style:{display:'flex',gap:'6px',padding:'14px 16px',background:C.sf,borderRadius:'14px',border:`1px solid ${C.bd}`,marginBottom:'4px'}});
+      dias.forEach(d_=>{const m=checkins.find(c=>c.data===d_&&c.momento==='manha'),n=checkins.find(c=>c.data===d_&&c.momento==='noite');const col=el('div',{style:{flex:'1',textAlign:'center'}});col.appendChild(el('div',{style:{fontSize:'10px',color:d_===today()?cor:C.faint,marginBottom:'5px',fontFamily:'monospace'}},wday(d_)));const bars=el('div',{style:{display:'flex',flexDirection:'column',gap:'3px'}});bars.appendChild(el('div',{style:{height:'5px',borderRadius:'3px',background:m?cor:'rgba(255,255,255,0.07)'}}));bars.appendChild(el('div',{style:{height:'5px',borderRadius:'3px',background:n?`${cor}88`:'rgba(255,255,255,0.07)'}}));col.appendChild(bars);cal.appendChild(col);});
+      w.appendChild(cal);
+      [...checkins].reverse().forEach(c=>{const item=el('div',{style:{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'14px',padding:'14px 16px'}});const top=el('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}});top.appendChild(el('div',{style:{fontSize:'11px',color:cor,fontFamily:'monospace'}},`${fmtDate(c.data)} · ${c.momento==='manha'?'🌤 manhã':'🌙 noite'}`));const meta=el('div',{style:{display:'flex',gap:'8px',fontSize:'12px',color:C.muted}});if(c.momento==='manha'&&c.dados?.sono_horas)meta.appendChild(document.createTextNode(`😴 ${c.dados.sono_horas}h`));if(c.momento==='noite'&&c.dados?.energia_inicio)meta.appendChild(document.createTextNode(`⚡ ${c.dados.energia_inicio}→${c.dados.energia_fim??'?'}`));if(c.dados?.humor)meta.appendChild(document.createTextNode(HUMORES[HUMOR_LBL.indexOf(c.dados.humor)]??'😐'));top.appendChild(meta);item.appendChild(top);item.appendChild(el('div',{style:{fontSize:'13px',color:'rgba(255,255,255,0.42)',lineHeight:'1.55',fontStyle:'italic'}},`"${c.texto_original}"`));if((c.dados?.sintomas||[]).length>0){const tags=el('div',{style:{marginTop:'8px',display:'flex',gap:'5px',flexWrap:'wrap'}});c.dados.sintomas.forEach(s=>tags.appendChild(el('div',{style:{fontSize:'11px',background:`${cor}20`,color:cor,borderRadius:'20px',padding:'2px 10px'}},s)));item.appendChild(tags);}w.appendChild(item);});
+    }
+    const nb=el('button',{style:{padding:'13px 0',borderRadius:'14px',background:`linear-gradient(135deg,${cor}80,${cor})`,border:'none',color:'#fff',fontSize:'14px',fontWeight:'600',marginTop:'4px',width:'100%'}},'novo check-in');nb.addEventListener('click',()=>{resetLocal();showForm();});w.appendChild(nb);
+    if(checkins.length>=4){const ab=el('button',{style:{padding:'12px 0',borderRadius:'14px',background:`${cor}10`,border:`1px solid ${cor}40`,color:cor,fontSize:'14px',width:'100%'}},'✦ análise da semana');ab.addEventListener('click',handleAnalise);w.appendChild(ab);}
+    content.appendChild(w);
+  }
+
+  function showForm(){fase='form';updNav('form');content.innerHTML='';
+    const w=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'}});
+    // Toggle
+    const tog=el('div',{style:{display:'flex',gap:'8px'}});
+    ['manha','noite'].forEach(m=>{const b=el('button',{style:{flex:'1',padding:'12px 0',borderRadius:'12px',fontSize:'14px',fontWeight:'500',transition:'all 0.2s',background:momento===m?`${cor}20`:C.sf,border:`1.5px solid ${momento===m?cor:C.bd}`,color:momento===m?cor:C.muted,opacity:jaFezHoje(m)?'0.45':'1'}},`${m==='manha'?'🌤 manhã':'🌙 noite'}${jaFezHoje(m)?' ✓':''}`);b.addEventListener('click',()=>{momento=m;showForm();});tog.appendChild(b);});
+    w.appendChild(tog);
+    // Roteiro
+    const rot=el('div',{style:{background:`${cor}0C`,border:`1px solid ${cor}28`,borderRadius:'14px',padding:'14px 16px'}});
+    rot.appendChild(el('div',{style:{fontSize:'10px',color:cor,marginBottom:'10px',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'monospace'}},momento==='manha'?'roteiro · manhã':'roteiro · noite'));
+    ROTEIRO[momento].forEach((q,i)=>{const row=el('div',{style:{display:'flex',gap:'10px',marginBottom:i<ROTEIRO[momento].length-1?'8px':'0'}});row.appendChild(el('div',{style:{fontSize:'11px',color:`${cor}90`,fontFamily:'monospace',marginTop:'1px',flexShrink:'0'}},`${i+1}.`));row.appendChild(el('div',{style:{fontSize:'13px',color:C.muted,lineHeight:'1.55'}},q));rot.appendChild(row);});
+    w.appendChild(rot);
+    // Voz
+    w.appendChild(buildVoicePanel());
+    // Campos
+    const cb=el('div',{style:{background:C.sf,border:`1px solid ${C.bd}`,borderRadius:'14px',padding:'16px'}});
+    cb.appendChild(el('div',{style:{fontSize:'10px',color:C.faint,marginBottom:'14px',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'monospace'}},momento==='manha'?'dados da noite':'dados do dia'));
+    cb.appendChild(momento==='manha'?buildCamposManha():buildCamposNoite());
+    w.appendChild(cb);
+    // Enviar
+    const eb=el('button',{style:{padding:'14px 0',borderRadius:'14px',border:'none',background:texto.trim()?`linear-gradient(135deg,${cor}99,${cor})`:'rgba(255,255,255,0.06)',color:texto.trim()?'#fff':C.faint,fontSize:'15px',fontWeight:'600',width:'100%',transition:'all 0.2s'}},'enviar check-in');
+    eb.addEventListener('click',handleSubmit);w.appendChild(eb);
+    if(checkins.length>=4){const ab=el('button',{style:{padding:'12px 0',borderRadius:'14px',background:`${cor}10`,border:`1px solid ${cor}40`,color:cor,fontSize:'14px',fontWeight:'500',width:'100%'}},`✦ análise da semana · ${checkins.length} registros`);ab.addEventListener('click',handleAnalise);w.appendChild(ab);}
+    content.appendChild(w);
+  }
+
+  function buildVoicePanel(){
+    const isRec=recStatus==='recording';
+    const panel=el('div',{style:{background:C.sf,border:`1.5px solid ${isRec?'rgba(196,64,74,0.5)':texto?cor+'80':C.bd}`,borderRadius:'18px',padding:'20px 18px',transition:'border-color 0.3s'}});
+    panel.appendChild(el('div',{style:{fontSize:'10px',color:C.faint,marginBottom:'18px',letterSpacing:'0.1em',textTransform:'uppercase',fontFamily:'monospace'}},momento==='manha'?'como foi a noite e como você acordou?':'como foi o dia?'));
+    const micWrap=el('div',{style:{display:'flex',justifyContent:'center',marginBottom:'10px'}});
+    const mic=el('button',{style:{width:'80px',height:'80px',borderRadius:'50%',border:'none',cursor:voiceOK?'pointer':'not-allowed',background:isRec?C.gradRec:`linear-gradient(135deg,${cor}99,${cor})`,boxShadow:isRec?'0 0 0 10px rgba(196,64,74,0.12),0 0 0 20px rgba(196,64,74,0.05)':`0 8px 32px ${cor}66`,transition:'all 0.3s',display:'flex',alignItems:'center',justifyContent:'center'}});
+    mic.innerHTML=isRec?'<svg width="22" height="22" viewBox="0 0 20 20" fill="white"><rect x="3" y="3" width="14" height="14" rx="2.5"/></svg>':'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    mic.addEventListener('click',()=>{if(isRec){stopRec(t=>{texto=t;isInterim=false;});recStatus='idle';showForm();}else{recStatus='recording';startRec((t,interim)=>{texto=t;isInterim=interim;const prev=document.getElementById('voice-prev');if(prev){prev.style.color=interim?C.muted:C.text;prev.style.fontStyle=interim?'italic':'normal';prev.textContent=t||'ouvindo…';}},err=>{voiceErr=err;recStatus='error';showForm();});}showForm();});
+    micWrap.appendChild(mic);panel.appendChild(micWrap);
+    panel.appendChild(el('div',{style:{textAlign:'center',fontSize:'12px',color:isRec?C.red:C.muted,fontFamily:'monospace',letterSpacing:'0.06em',height:'18px',marginBottom:'14px'}},isRec?'⏺ gravando…':voiceOK?'toque para gravar':'use o texto abaixo'));
+    if(texto||isRec){const pv=el('div',{style:{background:`${cor}10`,border:`1px solid ${cor}28`,borderRadius:'12px',padding:'12px 14px',marginBottom:'14px',minHeight:'48px'}});const pvt=el('div',{id:'voice-prev',style:{fontSize:'13px',lineHeight:'1.65',color:isInterim?C.muted:C.text,fontStyle:isInterim?'italic':'normal'}},texto||'ouvindo…');pv.appendChild(pvt);panel.appendChild(pv);}
+    const sep=el('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px'}});sep.appendChild(el('div',{style:{flex:'1',height:'1px',background:C.bd}}));sep.appendChild(el('span',{style:{fontSize:'10px',color:C.faint,fontFamily:'monospace',letterSpacing:'0.08em'}},'ou escreva'));sep.appendChild(el('div',{style:{flex:'1',height:'1px',background:C.bd}}));panel.appendChild(sep);
+    const ta=el('textarea',{style:{width:'100%',background:'rgba(255,255,255,0.04)',border:`1px solid ${C.bd}`,borderRadius:'10px',padding:'10px 12px',color:C.text,fontSize:'16px',resize:'vertical',outline:'none',lineHeight:'1.6',boxSizing:'border-box'},placeholder:momento==='manha'?'fale ou escreva livremente…':'o saldo do dia, como você está agora…',rows:'3'});
+    ta.value=texto;ta.addEventListener('input',e=>{texto=e.target.value;isInterim=false;});panel.appendChild(ta);
+    if(voiceErr)panel.appendChild(el('div',{style:{fontSize:'12px',color:C.red,marginTop:'8px'}},`⚠ ${voiceErr}`));
+    return panel;
+  }
+
+  function buildCamposManha(){
+    const w=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'}});
+    const g=el('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}});
+    const si=el('input',{type:'number',min:'0',max:'12',step:'0.5',placeholder:'ex: 7',style:{width:'100%',background:'rgba(255,255,255,0.06)',border:`1px solid ${C.bd}`,borderRadius:'8px',padding:'9px 12px',color:C.text,fontSize:'16px',boxSizing:'border-box',outline:'none'}});
+    si.value=sono;si.addEventListener('input',e=>sono=e.target.value);
+    const sw=el('div',{});sw.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'6px'}},'😴 sono (horas)'));sw.appendChild(si);g.appendChild(sw);
+    const ss=el('input',{type:'text',placeholder:'ex: dor de cabeça',style:{width:'100%',background:'rgba(255,255,255,0.06)',border:`1px solid ${C.bd}`,borderRadius:'8px',padding:'9px 12px',color:C.text,fontSize:'16px',boxSizing:'border-box',outline:'none'}});
+    ss.value=sintomaManha;ss.addEventListener('input',e=>sintomaManha=e.target.value);
+    const ssw=el('div',{});ssw.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'6px'}},'🤒 sintoma ao acordar'));ssw.appendChild(ss);g.appendChild(ssw);
+    w.appendChild(g);
+    const qw=el('div',{});qw.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'8px'}},'qualidade do sono'));
+    const qr=el('div',{style:{display:'flex',gap:'6px'}});
+    SONO_OPTS.forEach((l,i)=>{const b=el('button',{style:{flex:'1',padding:'7px 0',borderRadius:'8px',fontSize:'11px',background:sonoQ===i+1?`${cor}30`:'rgba(255,255,255,0.04)',border:`1px solid ${sonoQ===i+1?cor:C.bd}`,color:sonoQ===i+1?cor:C.faint,fontWeight:sonoQ===i+1?'600':'400'}},l);b.addEventListener('click',()=>{sonoQ=i+1;refreshOpts();});qr.appendChild(b);});
+    qw.appendChild(qr);w.appendChild(qw);return w;
+  }
+
+  function buildCamposNoite(){
+    const w=el('div',{style:{display:'flex',flexDirection:'column',gap:'14px'}});
+    const ew=el('div',{});ew.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'10px'}},'⚡ como variou sua energia hoje'));
+    const eg=el('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}});
+    ['de manhã','agora / à noite'].forEach((lbl,side)=>{const dw=el('div',{});dw.appendChild(el('div',{style:{fontSize:'11px',color:C.faint,marginBottom:'6px',fontFamily:'monospace'}},lbl));const row=el('div',{style:{display:'flex',gap:'5px'}});[1,2,3,4,5].forEach(n=>{const val=side===0?enI:enF;const b=el('button',{style:{flex:'1',height:'28px',borderRadius:'6px',fontSize:'12px',fontWeight:'600',background:val>=n?`${cor}35`:'rgba(255,255,255,0.04)',border:`1px solid ${val>=n?cor:C.bd}`,color:val>=n?cor:C.faint}},String(n));b.addEventListener('click',()=>{if(side===0)enI=n;else enF=n;refreshOpts();});row.appendChild(b);});dw.appendChild(row);eg.appendChild(dw);});
+    ew.appendChild(eg);w.appendChild(ew);
+    const hw=el('div',{});hw.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'8px'}},'saldo de humor do dia'));const hr=el('div',{style:{display:'flex',gap:'6px'}});HUMORES.forEach((e,i)=>{const b=el('button',{style:{flex:'1',height:'36px',borderRadius:'8px',fontSize:'20px',background:humor===i+1?`${cor}22`:'rgba(255,255,255,0.04)',border:`1px solid ${humor===i+1?cor:C.bd}`}},e);b.addEventListener('click',()=>{humor=i+1;refreshOpts();});hr.appendChild(b);});hw.appendChild(hr);w.appendChild(hw);
+    const aw=el('div',{});aw.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'8px'}},'🥗 alimentação hoje'));const ar=el('div',{style:{display:'flex',gap:'6px'}});ALIM_OPTS.forEach(a=>{const b=el('button',{style:{flex:'1',padding:'7px 0',borderRadius:'8px',fontSize:'12px',background:alim===a?`${cor}25`:'rgba(255,255,255,0.04)',border:`1px solid ${alim===a?cor:C.bd}`,color:alim===a?cor:C.faint,fontWeight:alim===a?'600':'400'}},a);b.addEventListener('click',()=>{alim=a;refreshOpts();});ar.appendChild(b);});aw.appendChild(ar);w.appendChild(aw);
+    const snw=el('div',{});snw.appendChild(el('div',{style:{fontSize:'12px',color:C.muted,marginBottom:'6px'}},'🤒 algum sintoma hoje'));const sni=el('input',{type:'text',placeholder:'ex: dor de cabeça, cansaço fora do comum…',style:{width:'100%',background:'rgba(255,255,255,0.06)',border:`1px solid ${C.bd}`,borderRadius:'8px',padding:'9px 12px',color:C.text,fontSize:'16px',boxSizing:'border-box',outline:'none'}});sni.value=sintomaNoite;sni.addEventListener('input',e=>sintomaNoite=e.target.value);snw.appendChild(sni);w.appendChild(snw);
+    return w;
+  }
+
+  // Refresca só botões de opção sem destruir inputs de texto
+  function refreshOpts(){
+    const camposBox=content.querySelector('.campos-inner');
+    if(camposBox){camposBox.innerHTML='';camposBox.appendChild(momento==='manha'?buildCamposManha():buildCamposNoite());}
+    else showForm();
+  }
+
+  function resetLocal(){resetRec();texto='';isInterim=false;recStatus='idle';voiceErr='';sono='';sonoQ=0;sintomaManha='';enI=0;enF=0;humor=0;alim='';sintomaNoite='';}
+
+  async function handleSubmit(){
+    if(!texto.trim())return;
+    if(recStatus==='recording')stopRec(t=>{texto=t;});
+    showLoading('Processando seu check-in…');
+    const extras=momento==='manha'?{sono_horas:sono||null,sono_q:sonoQ||null,sintoma:sintomaManha||null}:{energia_i:enI||null,energia_f:enF||null,humor:humor?HUMOR_LBL[humor-1]:null,alim:alim||null,sintoma:sintomaNoite||null};
+    let dados={};
+    try{showLoading('Entendendo o que você disse…');const raw=await callClaude(buildExtractor(texto,momento,extras));dados=JSON.parse(raw.replace(/```json|```/g,'').trim());}
+    catch{dados={...extras,nota_livre:texto,contexto_momento:momento,sintomas:extras.sintoma?[extras.sintoma]:[]};}
+    const novo={id:Date.now(),data:today(),momento,texto_original:texto,dados};
+    checkins=[...checkins,novo];saveCheckins(profile.id,checkins);
+    showLoading('Preparando seu insight…');
+    const hist=checkins.slice(-14).filter(c=>c.id!==novo.id);
+    try{const ins=await callClaude(buildInsight(dados,hist,profile.nome,momento));showInsight(ins);}
+    catch{showInsight('Erro ao gerar insight. Verifique sua API key.');}
+  }
+
+  async function handleAnalise(){
+    showLoading('Analisando sua semana…');
+    try{const r=await callClaude(buildAnalise(checkins.slice(-14),profile.nome));showAnalise(r);}
+    catch{showAnalise('Erro ao gerar análise. Verifique sua API key.');}
+  }
+
+  showForm();
+  return root;
+}
+
 // ── INIT ──────────────────────────────────────────────────────
-const hasKey=!!getApiKey();
-navigate(hasKey?'select':'setup');
+navigate(getApiKey()?'select':'setup');
 </script>
 </body>
 </html>
